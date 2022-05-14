@@ -1,0 +1,140 @@
+mdp 
+
+// interação desviar
+const double p= 0.10;	
+
+// interação voltar
+const double v= 0;	
+
+// interação atrasar
+const double t= 0;	
+
+// OBS: 
+// (p+v+t) < 1
+// todos: p/3 v/3 t/3
+
+// distâncias em UD
+
+//base
+const int bw=18;
+const int bb=1; 
+const int br=25;
+
+//rota secundária
+const int rb=20;
+const int rr=1; 
+const int rw=7;  
+
+//waypoint
+const int wr=10;
+const int ww=1; 
+const int wb=22; 
+
+
+//Variações UD 
+const l=-1; 
+
+//br+ wr+ bw- wb-
+
+//Início módulo UAV
+module UAV
+
+//Variáveis de localização
+
+//Pouso e decolagem
+g:[0..1] 	init 1;
+
+//Base
+b:[0..1] 	init 0;
+
+//Waypoint
+w:[0..1] 	init 0;
+
+//Rota secundária
+r:[0..1] 	init 0; 
+
+//Ida e retorno da fotografia
+f:[0..1] 	init 0; 
+
+//calculo da distância
+d:[0..1000] 	init 0;
+
+//Montagem do cenário e interações
+
+//Pousado
+[g]g=1 -> 
+
+	// Seguir plano Pousado
+	(g'=0)&(b'=1)&(d'=0);
+
+//Fotografia
+[UAV]f=1 -> 
+
+	//Seguir plano fotografia
+	(w'=1)&(f'=0);
+
+//Base
+[UAV]b=1 -> 	
+
+	//Seguir o plano Base
+	(1-p-v-t):(f'=1)&(b'=0)&
+	(d'=d+bw-l)
+
+	//Interação Desviar Base
+	+ p:(r'=1)&(b'=0)&
+	(d'=d+br+l)
+
+	//Interação voltar Base
+	+ v:(w'=1)&(b'=0)&
+	(d'=d+bw-l)
+
+	//Interação Atrasar Base
+	+ t:(b'=b)&
+	(d'=d+bb);
+
+//Waypoint
+[UAV]w=1 -> 	
+
+	//Seguir o plano Waypoint
+	(1-p-v-t):(g'=1)&(w'=0)&
+	(d'=d+wb-l)
+
+	//Interação Desviar Waypoint
+	+ p:(r'=1)&(w'=0)&
+	(d'=d+wr+l)
+
+	//Interação voltar Waypoint
+	+ v:(b'=1)&(w'=0)&
+	(d'=d+wb-l)
+
+	//Interação Atrasar Waypoint
+	+ t:(w'=w)&
+	(d'=d+ww);
+
+//Rota secundária
+[UAV]r=1 -> 	
+
+	//Seguir o plano Rota secundária
+	(1-p-v-t):(w'=1)&(r'=0)&
+	(d'=d+rw+l)
+
+	//Interação Desviar Rota secundária
+	+ p:(b'=1)&(r'=0)&
+	(d'=d+rb)
+
+	//Interação voltar Rota secundária
+	+ v:(r'=0)&(w'=1)&
+	(d'=d+rw)
+
+	//Interação Atrasar Rota secundária
+	+ t:(r'=r)&
+	(d'=d+rr);
+
+endmodule 
+
+// Distâncias UD
+rewards "dist" 
+
+[g] true: d; 
+
+endrewards

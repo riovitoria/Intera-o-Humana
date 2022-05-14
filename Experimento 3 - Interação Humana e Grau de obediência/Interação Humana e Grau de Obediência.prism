@@ -1,0 +1,68 @@
+smg
+
+player P1 Planos endplayer
+player P2 HITL   endplayer
+player P3 BDI    endplayer
+
+const double p=0.0; 
+const double v=0.7; 
+const double t=0.0; 
+const double a=p+v+t;
+
+const int bw=18; 
+const int bb=1;  
+const int br=25; 
+const int rb=20; 
+const int rr=1;  
+const int rw=7;  
+const int wr=10; 
+const int ww=1;  
+const int wb=22; 
+
+global z:bool init true;
+global e:[0..2] init 0;
+global g:[0..1] init 1;
+global b:[0..1] init 0;
+global w:[0..1] init 0; 
+global f:[0..1] init 0; 
+global r:[0..1] init 0; 
+global o:[0..100] init 0;
+global d:[0..1000] init 0;
+
+module Planos
+po:[0..5000];
+
+[] z & po>1010 -> (po'=0)&(o'=o+10);
+[] z & o=110 -> (z'=false);
+[] z & g=1->(g'=0)&(b'=1)&(d'=0);
+[] z & f=1->(w'=1)&(f'=0);
+[] z & b=1 & e=0 -> (1-a):(f'=1)&(b'=0)&(d'=d+bw)
+	+ (a): (e'=1); 
+[] z & w=1 & e=0 -> (1-a):(g'=1)&(w'=0)&(d'=d+wb)&(po'=po+1) 
+	+ (a): (e'=1);
+[] z & r=1 & e=0 ->(1-a):(w'=1)&(r'=0)&(d'=d+rw) 
+	+ (a): (e'=1);   
+endmodule 
+
+module BDI
+[] z & b=1 & e=1 -> (1-o/100):(e'=0) 
+		+ o/100:(e'=2);
+[] z & w=1 & e=1 -> (1-o/100):(e'=0) 
+		+ o/100:(e'=2);
+[] z & r=1 & e=1 -> (1-o/100):(e'=0) 	
+		+ o/100:(e'=2);
+endmodule
+
+module HITL
+[] z & b=1 & e=2 -> p/(a):(r'=1)&(b'=0)&(d'=d+br)&(e'=0)
+		+ v/(a):(w'=1)&(b'=0)&(d'=d+bw)&(e'=0)
+		+ t/(a):(b'=b)&(d'=d+bb)&(e'=0);
+[] z & w=1 & e=2 -> p/(a):(r'=1)&(w'=0)&(d'=d+wr)&(e'=0)
+		+ v/(a):(b'=1)&(w'=0)&(d'=d+wb)&(e'=0)
+		+ t/(a):(w'=w)&(d'=d+ww)&(e'=0);
+[] z & r=1 & e=2 -> p/(a):(b'=1)&(r'=0)&(d'=d+rb)&(e'=0)
+		+ v/(a):(r'=0)&(w'=1)&(d'=d+rw)&(e'=0)
+		+ t/(a):(r'=r)&(d'=d+rr)&(e'=0);
+endmodule
+
+rewards "dist" g=1: d; endrewards
